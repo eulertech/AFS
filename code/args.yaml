@@ -1,0 +1,84 @@
+
+description: 'Automated feature selection tool script'
+
+args:
+
+#------------------------------------------------------------------------------
+
+- data_path: 
+
+    flag: 'd'
+    options:
+
+        help: 'Path to data file (REQUIRED)'
+        required: True
+
+#------------------------------------------------------------------------------
+
+- test_data_path: 
+
+    flag: 't'
+    options:
+
+        help: 'Path to holdout data file'
+        required: False
+
+#------------------------------------------------------------------------------
+
+- resume_file_prefix: 
+
+    flag: 'r'
+    options:
+
+        help: 'Prefix of file name from which to resume.\nFor ex., to load afs_file_xxx.p, use -rafs_file'
+        required: False
+
+#------------------------------------------------------------------------------
+
+- afs_config_path: 
+
+    flag: 'c'
+    options:
+
+        help: 'Path to AFS configuration file'
+
+#------------------------------------------------------------------------------
+
+- logging_config_path:
+
+    flag: 'l'
+    options:
+
+        help: 'Path to logging configuration file'
+        required: False
+
+#------------------------------------------------------------------------------
+
+- afs_home_path: 
+
+    flag: 'a'
+    options:
+
+        help: 'Home directory of the AFS source files'
+        required: False
+
+#------------------------------------------------------------------------------
+
+- output_directory_path: 
+
+    flag: 'o'
+    options:
+
+        help: 'Path to output directory (REQUIRED)'
+        required: True
+
+#------------------------------------------------------------------------------
+
+- python_package_directory_path: 
+
+    flag: 'p'
+    options:
+
+        help: 'Path to python libaries'
+
+#------------------------------------------------------------------------------

@@ -1,0 +1,193 @@
+########################################################
+# afs_example.yaml
+# This is an example of an afs configuration file.
+# Below are the configurable options and some
+# commnetary on what they do
+########################################################
+
+### Parameters indicating the length of execution
+num_epochs: 20
+generations_per_epoch: 20
+# An epoch consists of one or more Genetric Algorithm generations
+#  plus one round of Best Feature Set optimization.
+#  Since holdout validation occurs after the iteration over all
+#  epochs, it is often useful to set num_epochs to 0, as a means
+#  of only running the holdout validation.
+
+### Seeding the random number generators
+seed: 0
+# This seed is used to set the seed for both
+#  `random` and `numpy.random`
+
+### File name autonumbering
+default_fname_zero_padding: 3
+# generated filename counters will pad with zeros to satisfy
+#  the number of digits desired.
+#  A value of 4, for example, means that files will be numbered
+#  with 0000, 0001, 0002, etc.
+
+### Specify the delimiter (only used for text file import)
+delimiter: ','
+
+### Test/Train settings
+split_test_data_if_not_provided: False #{True, False}
+pct_test_data: 0.25 #(0.0, 1.0)
+# If a test data set is provided, using the -t command line
+#  argument, both these parameters are ignored, and the file
+#  loaded is used for test (a.k.a. holdout) data
+#  If no test data file is supplied, and 
+#  split_test_data_if_not_provided is set to False,
+#  the entire -d data set will be used for training, and
+#  no validation step will be performed at the end (and
+#  the pct_test_data parameter is ignored).
+#  Otherwise, the -d data set will be split into train and
+#  test data sets according to the pct_test_data parameter 
+
+### Population configuration
+pop_size: 200
+hof_size: 20
+crossover_prob: 0.7 #[0.0, 1.0]
+mutation_prob: 0.3 #[0.0, 1.0]
+# pop_size is the number of individuals with which to
+#  initialize the population. Generally, pop_size should
+#  be chosen to be large enough to hold the important
+#  "engineered" features and their constituents.
+#  Another rule of thumb is to size the population at
+#  least as large as the number of original features.
+#
+# hof_size is the size of the Hall of Fame object,
+#  representing the most fit individuals discovered
+#  by the genetic algorithm thus far. Generally, pop_size
+#  should be chosen to be large enough to hold the important
+#  "engineered" features. A large hof_size can have the 
+#  consequence of making filter methods based on similarity
+#  comparison with the hof very costly.
+#
+# crossover_prob and mutation_prob are the probability
+#  of choosing the registered 'mate' and 'mutate' functions,
+#  respectively. Their sum must not exceed 1.0.
+
+### Specify the target column name
+target_name: 'class'
+### List of ABT columns to manually exclude from the data
+columns_to_drop:
+  - 'ID'
+  - 'POLICY_NUMBER'
+# In addition to the target column, these columns (if they
+#  exist), will be dropped from the DataFrame
+
+### Convergence criteria
+pop_convergence_evals_per_gen: 2.5
+# stop GP evolution if pop_is_converged
+# pop_is_converged =
+#  epoch_evals / epoch_generations < pop_convergence_evals_per_gen
+bfs_convergence_n_epochs: 3
+# define bfs_is_converged as at least this many epochs with no improvement
+#  in bfs_score
+# stop algorithm if (pop_is_converged and bfs_is_converged)
+
+### Definition of GP Operators
+operator_dict:
+    operator.mul: '([float,float],float)'
+    custom.customOperators.encode_labels: '([str],float)'
+    custom.customOperators.categorical_concat: '([str,str],str)'
+    custom.customOperators.z_score_by_group: '([float,str],float)'
+    custom.customOperators.max_by_group: '([float,str],float)'
+    custom.customOperators.min_by_group: '([float,str],float)'
+    custom.customOperators.conjuction: '([bool,bool],bool)'
+    custom.customOperators.disjuction: '([bool,bool],bool)'
+    custom.customOperators.negation: '([bool],bool)'
+# operator_dict should contain key-value pairs, where each key
+#  is the qualified name of a function, and each value is a
+#  string containing the list of operand types and the return
+#  type in the following format:
+#  '([operand_type1,operand_type2],return_type)'
+#  The current AFS tool expects types from among
+#  {float, str, bool, np.datetime64}
+
+### List of acceptable return types for an Individual
+return_type_list: '[float, bool, str]'
+
+### Parameters for the population Builder
+builder_gen_fcn: 'custom.customGp.genHalfAndHalfTyped'
+builder_min_depth: 0
+builder_max_depth: 0
+builder_weight: 1
+# builder_gen_fcn is the qualified name of the function to be
+#  used to generate Individuals in the initial population.
+#  trees with heights between [builder.min_depth, builder.max_depth]
+#  will be generated.
+# To maximize fitness, set builder_weight to 1, to minimize fitness,
+#  set builder_weight to -1
+
+### Evolutionary algorithm configuration
+# Wheter or not to recalculate fitnesses of HallOfFame individuals
+hof_recalculate_flag: True
+# Choice of evolutionary algorithm (currently only the below
+#  is implemented)
+evolutionary_algorithm: 'custom.customAlgorithms.eaMuPlusLambdaExclusive'
+# Additional args for the evolutionary algorithm
+algo_args:
+  mu: 200
+  lambda_: 100
+# For the mu + lambda algorithm it almost always makes sense to set
+#  mu equal to pop_size
+# mu is the number of (offspring + population) to keep each generation
+# lambda_ is the number of new offspring per generation
+
+## Filter evaluation method
+#  (ignored if wrapper_classifier is not 'None')
+# currently implemented options are:
+# corr_target - Simple univariate correlation with target
+# corr_target_minus_hof - a multivariate metric: the difference between
+#  correlation with target and correlation with the most similar feature
+#  in the HOF
+# corr_target_minus_bfs - a multivariate metric: the difference between
+#  correlation with target and correlation with the most similar feature
+#  in the BFS
+evaluate_method: 'corr_target_minus_hof'
+# Wrapper evaluation method
+wrapper_classifier: None
+# Wrapper classifier arguments dict (ignored if wrapper_classifier is 'None')
+wrapper_classifier_args:
+  n_estimators: 100
+  random_state: 0
+  max_features: 4
+
+# Evolutionary algorithm selection function
+select_fcn: 'deap.tools.selBest'
+
+# Evolutionary algorithm mutate function
+mutate_fcn: 'custom.customGp.full_uniform_mutation'
+mutate_min_height: 0
+mutate_max_height: 0
+
+# Evolutionary algorithm mate function
+mate_fcn: 'custom.customTools.cxJoinWithRandomOp'
+mate_min_height: 0
+mate_max_height: 2
+
+### Best Feature Set configuration
+bfs_min_size: 5
+bfs_max_size: 50
+bfs_initial_size: 5
+bfs_max_remove_evals: 10 # process up to this many individuals per epoch from the BFS delete candidate queue
+bfs_min_remove_evals: 10 # process up to this many individuals per epoch from the BFS add candidate queue
+bfs_add_threshold: 0.0005 # need to improve bfs_score by this amount to be added
+bfs_remove_threshold: 0.0005 # bfs_score must drop by this amount when removed, otherwise the feature will be discarded
+bfs_replace_threshold: 0.0 # need to improve bfs_score by this amount to replace a similar feature
+bfs_n_cv_folds: 3 # number of folds for training cross-validation
+bfs_add_from_pop: True # whether to add individuals to BFS from population
+bfs_add_from_hof: True # whether to add individuals to BFS from hall of fame
+bfs_initialize_method: 'hof' #{'hof', 'abt'}
+# Choose 'hof' to initialize as the top `bfs_initial_size' features of the hof
+# Choose 'abt' to initialize via random (without replacement) sample of base features
+
+bfs_classifier: 'sklearn.linear_model.LogisticRegression'
+bfs_classifier_args: {}
+# The wrapper classifier used to produce the bfs_score
+
+### Validation and plotting options
+validation_classifier: 'sklearn.linear_model.LogisticRegression'
+validation_classifier_args: {}
+# The classifier used to perform holdout validation

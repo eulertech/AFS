@@ -1,0 +1,32 @@
+version: 1
+
+loggers:
+
+    __main__:
+        level: !!python/name:logging.DEBUG
+        handlers: [console, file]
+
+    afs:
+        level: !!python/name:logging.DEBUG
+        handlers: [console, file]
+
+handlers:
+
+    console:
+        class: logging.StreamHandler
+        stream: ext://sys.stdout
+        level: !!python/name:logging.NOTSET
+        formatter: namedFormatter
+
+    file:
+        class: logging.FileHandler
+        filename: afs.log
+        level: !!python/name:logging.NOTSET
+        formatter: namedFormatter
+
+formatters:
+
+    namedFormatter:
+        class: 'logging.Formatter'
+        format: '%(name)s|%(asctime)s|%(levelname) 5s|%(message)s'
+        datefmt: '%Y-%m-%d %H:%M:%S'
